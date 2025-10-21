@@ -1,12 +1,10 @@
-from flask import Flask, request, jsonify, send_file, render_template
-from werkzeug.utils import secure_filename
+import base64
 import os
 import uuid
 import cv2
-import numpy as np
+from flask import Flask, request, jsonify, send_file, render_template
+from werkzeug.utils import secure_filename
 from data_augmentation import DataAugmentation
-import base64
-from io import BytesIO
 
 app = Flask(__name__)
 
@@ -26,8 +24,10 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 # 初始化数据增强器
 augmenter = DataAugmentation()
 
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 def image_to_base64(image_path):
     """将图像转换为base64编码"""
@@ -35,9 +35,11 @@ def image_to_base64(image_path):
         encoded_string = base64.b64encode(image_file.read()).decode()
     return encoded_string
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -57,21 +59,15 @@ def upload_file():
                 unique_filename = f"{uuid.uuid4()}_{filename}"
                 filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
                 file.save(filepath)
-                uploaded_files.append({
-                    'filename': unique_filename,
-                    'original_name': filename
-                })
+                uploaded_files.append({'filename': unique_filename, 'original_name': filename})
             else:
                 return jsonify({'error': f'不支持的文件格式: {file.filename}'}), 400
 
-        return jsonify({
-            'success': True,
-            'files': uploaded_files,
-            'message': f'成功上传 {len(uploaded_files)} 个文件'
-        })
+        return jsonify({'success': True, 'files': uploaded_files, 'message': f'成功上传 {len(uploaded_files)} 个文件'})
 
     except Exception as e:
         return jsonify({'error': f'上传失败: {str(e)}'}), 500
+
 
 @app.route('/augment', methods=['POST'])
 def augment_image():
@@ -91,11 +87,7 @@ def augment_image():
         for filename in filenames:
             input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             if not os.path.exists(input_path):
-                results.append({
-                    'success': False,
-                    'filename': filename,
-                    'error': '文件不存在'
-                })
+                results.append({'success': False, 'filename': filename, 'error': '文件不存在'})
                 continue
 
             # 生成输出文件名
@@ -105,20 +97,11 @@ def augment_image():
             # 读取图像
             image = cv2.imread(input_path)
             if image is None:
-                results.append({
-                    'success': False,
-                    'filename': filename,
-                    'error': '无法读取图像文件'
-                })
+                results.append({'success': False, 'filename': filename, 'error': '无法读取图像文件'})
                 continue
 
             # 应用数据增强，传递参数
-            params = {
-                'brightness': brightness,
-                'contrast': contrast,
-                'noise_type': 'gaussian',
-                'blur_type': 'gaussian'
-            }
+            params = {'brightness': brightness, 'contrast': contrast, 'noise_type': 'gaussian', 'blur_type': 'gaussian'}
 
             augmented_image = augmenter.apply_augmentation(image, augmentations, **params)
 
@@ -128,21 +111,15 @@ def augment_image():
             # 将图像转换为base64以便在前端显示
             image_base64 = image_to_base64(output_path)
 
-            results.append({
-                'success': True,
-                'original_filename': filename,
-                'output_filename': output_filename,
-                'image_data': f"data:image/jpeg;base64,{image_base64}"
-            })
+            results.append({'success': True, 'original_filename': filename, 'output_filename': output_filename,
+                            'image_data': f"data:image/jpeg;base64,{image_base64}"})
 
-        return jsonify({
-            'success': True,
-            'results': results,
-            'message': f'成功处理 {len([r for r in results if r["success"]])} 个文件'
-        })
+        return jsonify({'success': True, 'results': results,
+                        'message': f'成功处理 {len([r for r in results if r["success"]])} 个文件'})
 
     except Exception as e:
         return jsonify({'error': f'处理失败: {str(e)}'}), 500
+
 
 @app.route('/download/<filename>')
 def download_file(filename):
@@ -155,22 +132,22 @@ def download_file(filename):
     except Exception as e:
         return jsonify({'error': f'下载失败: {str(e)}'}), 500
 
+
 @app.route('/preview/<filename>')
 def preview_original(filename):
     try:
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         if os.path.exists(file_path):
             image_base64 = image_to_base64(file_path)
-            return jsonify({
-                'success': True,
-                'image_data': f"data:image/jpeg;base64,{image_base64}"
-            })
+            return jsonify({'success': True, 'image_data': f"data:image/jpeg;base64,{image_base64}"})
         else:
             return jsonify({'error': '文件不存在'}), 404
     except Exception as e:
         return jsonify({'error': f'预览失败: {str(e)}'}), 500
 
+
 if __name__ == '__main__':
     import os
+
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
