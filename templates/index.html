@@ -186,6 +186,15 @@
             user-select: none;
         }
 
+        .checkbox-item.disabled {
+            background-color: #f3f4f6;
+            border-color: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
         .parameter-controls {
             margin: 20px 0;
             padding: 20px;
@@ -225,6 +234,11 @@
             outline: none;
             -webkit-appearance: none;
             background: #d1d5db;
+        }
+
+        .slider-item input[type="range"]:disabled {
+            background: #e5e7eb;
+            cursor: not-allowed;
         }
 
         .slider-item input[type="range"]::-webkit-slider-thumb {
@@ -436,24 +450,24 @@
                     <input type="checkbox" id="brightness" value="brightness">
                     <label for="brightness">💡 亮度调节</label>
                 </div>
-                <div class="checkbox-item" onclick="toggleCheckbox('contrast')">
-                    <input type="checkbox" id="contrast" value="contrast">
+                <div class="checkbox-item disabled" onclick="toggleCheckbox('contrast')">
+                    <input type="checkbox" id="contrast" value="contrast" disabled>
                     <label for="contrast">🌗 对比度调节</label>
                 </div>
-                <div class="checkbox-item" onclick="toggleCheckbox('noise')">
-                    <input type="checkbox" id="noise" value="noise">
+                <div class="checkbox-item disabled" onclick="toggleCheckbox('noise')">
+                    <input type="checkbox" id="noise" value="noise" disabled>
                     <label for="noise">📡 添加噪声</label>
                 </div>
-                <div class="checkbox-item" onclick="toggleCheckbox('blur')">
-                    <input type="checkbox" id="blur" value="blur">
+                <div class="checkbox-item disabled" onclick="toggleCheckbox('blur')">
+                    <input type="checkbox" id="blur" value="blur" disabled>
                     <label for="blur">🌫️ 模糊效果</label>
                 </div>
-                <div class="checkbox-item" onclick="toggleCheckbox('perspective')">
-                    <input type="checkbox" id="perspective" value="perspective">
+                <div class="checkbox-item disabled" onclick="toggleCheckbox('perspective')">
+                    <input type="checkbox" id="perspective" value="perspective" disabled>
                     <label for="perspective">📐 透视变换</label>
                 </div>
-                <div class="checkbox-item" onclick="toggleCheckbox('elastic')">
-                    <input type="checkbox" id="elastic" value="elastic">
+                <div class="checkbox-item disabled" onclick="toggleCheckbox('elastic')">
+                    <input type="checkbox" id="elastic" value="elastic" disabled>
                     <label for="elastic">🌊 弹性变形</label>
                 </div>
             </div>
@@ -468,7 +482,7 @@
                     </div>
                     <div class="slider-item">
                         <label for="contrastSlider">对比度 (0.2-2.0):</label>
-                        <input type="range" id="contrastSlider" min="0.2" max="2.0" step="0.1" value="1.0">
+                        <input type="range" id="contrastSlider" min="0.2" max="2.0" step="0.1" value="1.0" disabled>
                         <span id="contrastValue">1.0</span>
                     </div>
                 </div>
@@ -507,6 +521,7 @@
 
         function toggleCheckbox(id) {
             const checkbox = document.getElementById(id);
+            if (checkbox.disabled) return;
             checkbox.checked = !checkbox.checked;
         }
 
@@ -553,34 +568,41 @@
             messageArea.innerHTML = '<div class="loading"><div class="spinner"></div><p style="font-size: 1.1rem; color: #374151;">处理中，请稍候...</p></div>';
         }
 
-        function handleMultipleFiles(files) {
+        async function handleMultipleFiles(files) {
             if (files.length === 0) return;
 
             showLoading();
 
-            const formData = new FormData();
-            files.forEach(file => {
+            let successCount = 0;
+            for (const file of files) {
+                const formData = new FormData();
                 formData.append('files', file);
-            });
 
-            fetch('/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    uploadedFiles = data.files;
-                    showMessage(`成功上传 ${data.files.length} 个文件！`, 'success');
-                    displayFileList();
-                    augmentationOptions.style.display = 'block';
-                } else {
-                    showMessage(`上传失败: ${data.error}`, 'error');
+                try {
+                    const response = await fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+
+                    if (data.success && Array.isArray(data.files)) {
+                        uploadedFiles = uploadedFiles.concat(data.files);
+                        successCount += data.files.length;
+                    } else {
+                        console.error('上传失败', data.error || data);
+                    }
+                } catch (error) {
+                    console.error('上传失败', error);
                 }
-            })
-            .catch(error => {
-                showMessage(`上传失败: ${error.message}`, 'error');
-            });
+            }
+
+            if (successCount > 0) {
+                showMessage(`成功上传 ${successCount} 个文件！`, 'success');
+                displayFileList();
+                augmentationOptions.style.display = 'block';
+            } else {
+                showMessage('上传失败，请重试', 'error');
+            }
         }
 
         function displayFileList() {
