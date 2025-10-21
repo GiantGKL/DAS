@@ -7,11 +7,11 @@ __pycache__/
 venv/
 env/
 ENV/
-
 # 忽略 outputs 文件夹中的所有文件
 outputs/
 uploads/
-
+dist/
+build/
 # IDE
 .vscode/
 .idea/
