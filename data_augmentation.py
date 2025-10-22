@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import random
 from PIL import Image, ImageEnhance
-import os
 
 class DataAugmentation:
     def __init__(self):

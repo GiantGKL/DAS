@@ -38,6 +38,13 @@
             letter-spacing: -0.025em;
         }
 
+        .checkbox-item input,
+        .checkbox-item label {
+            /*  input 和 label "无视" 鼠标点击，
+               点击事件会直接“穿透”到父级 div 上 */
+            pointer-events: none;
+        }
+
         .subtitle {
             text-align: center;
             color: #6b7280;
@@ -120,7 +127,7 @@
             margin: 5px 0;
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .file-item-name {
@@ -186,6 +193,15 @@
             user-select: none;
         }
 
+        .checkbox-item.disabled {
+            background-color: #f3f4f6;
+            border-color: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
         .parameter-controls {
             margin: 20px 0;
             padding: 20px;
@@ -225,6 +241,11 @@
             outline: none;
             -webkit-appearance: none;
             background: #d1d5db;
+        }
+
+        .slider-item input[type="range"]:disabled {
+            background: #e5e7eb;
+            cursor: not-allowed;
         }
 
         .slider-item input[type="range"]::-webkit-slider-thumb {
@@ -308,8 +329,12 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .results-section {
@@ -394,250 +419,258 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>图像数据增强工具</h1>
-        <p class="subtitle">支持批量图像处理和数据增强</p>
+<div class="container">
+    <h1>图像数据增强工具</h1>
+    <p class="subtitle">支持批量图像处理和数据增强</p>
 
-        <div class="upload-section" id="uploadArea">
-            <div class="upload-icon">📁</div>
-            <p style="font-size: 1.125rem; color: #374151; margin-bottom: 8px; font-weight: 500;">选择或拖拽图像文件</p>
-            <p style="color: #6b7280; margin-bottom: 20px;">支持 PNG、JPG、JPEG、GIF、BMP 格式</p>
-            <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
-            <button class="btn" onclick="document.getElementById('fileInput').click()">选择图像文件</button>
+    <div class="upload-section" id="uploadArea">
+        <div class="upload-icon">📁</div>
+        <p style="font-size: 1.125rem; color: #374151; margin-bottom: 8px; font-weight: 500;">选择或拖拽图像文件</p>
+        <p style="color: #6b7280; margin-bottom: 20px;">支持 PNG、JPG、JPEG、GIF、BMP 格式</p>
+        <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+        <button class="btn" onclick="document.getElementById('fileInput').click()">选择图像文件</button>
+    </div>
+
+    <div class="file-list" id="fileList">
+        <h3 style="margin-bottom: 15px;">已选择的文件 <span class="badge badge-primary" id="fileCount">0</span></h3>
+        <div id="fileItems"></div>
+    </div>
+
+    <div class="augmentation-options" id="augmentationOptions">
+        <div class="options-header">
+            选择数据增强方法
         </div>
-
-        <div class="file-list" id="fileList">
-            <h3 style="margin-bottom: 15px;">已选择的文件 <span class="badge badge-primary" id="fileCount">0</span></h3>
-            <div id="fileItems"></div>
-        </div>
-
-        <div class="augmentation-options" id="augmentationOptions">
-            <div class="options-header">
-                选择数据增强方法
+        <div class="checkbox-group">
+            <div class="checkbox-item" onclick="toggleCheckbox('rotation')">
+                <input type="checkbox" id="rotation" value="rotation" checked>
+                <label for="rotation">🔄 随机旋转</label>
             </div>
-            <div class="checkbox-group">
-                <div class="checkbox-item" onclick="toggleCheckbox('rotation')">
-                    <input type="checkbox" id="rotation" value="rotation" checked>
-                    <label for="rotation">🔄 随机旋转</label>
-                </div>
-                <div class="checkbox-item" onclick="toggleCheckbox('flip')">
-                    <input type="checkbox" id="flip" value="flip" checked>
-                    <label for="flip">🔃 随机翻转</label>
-                </div>
-                <div class="checkbox-item" onclick="toggleCheckbox('crop')">
-                    <input type="checkbox" id="crop" value="crop" checked>
-                    <label for="crop">✂️ 随机裁剪</label>
-                </div>
-                <div class="checkbox-item" onclick="toggleCheckbox('scale')">
-                    <input type="checkbox" id="scale" value="scale" checked>
-                    <label for="scale">📏 随机缩放</label>
-                </div>
-                <div class="checkbox-item" onclick="toggleCheckbox('brightness')">
-                    <input type="checkbox" id="brightness" value="brightness">
-                    <label for="brightness">💡 亮度调节</label>
-                </div>
-                <div class="checkbox-item" onclick="toggleCheckbox('contrast')">
-                    <input type="checkbox" id="contrast" value="contrast">
-                    <label for="contrast">🌗 对比度调节</label>
-                </div>
-                <div class="checkbox-item" onclick="toggleCheckbox('noise')">
-                    <input type="checkbox" id="noise" value="noise">
-                    <label for="noise">📡 添加噪声</label>
-                </div>
-                <div class="checkbox-item" onclick="toggleCheckbox('blur')">
-                    <input type="checkbox" id="blur" value="blur">
-                    <label for="blur">🌫️ 模糊效果</label>
-                </div>
-                <div class="checkbox-item" onclick="toggleCheckbox('perspective')">
-                    <input type="checkbox" id="perspective" value="perspective">
-                    <label for="perspective">📐 透视变换</label>
-                </div>
-                <div class="checkbox-item" onclick="toggleCheckbox('elastic')">
-                    <input type="checkbox" id="elastic" value="elastic">
-                    <label for="elastic">🌊 弹性变形</label>
-                </div>
+            <div class="checkbox-item" onclick="toggleCheckbox('flip')">
+                <input type="checkbox" id="flip" value="flip" checked>
+                <label for="flip">🔃 随机翻转</label>
             </div>
-
-            <div class="parameter-controls">
-                <div class="parameter-header">参数调节</div>
-                <div class="slider-group">
-                    <div class="slider-item">
-                        <label for="brightnessSlider">亮度 (0.2-2.0):</label>
-                        <input type="range" id="brightnessSlider" min="0.2" max="2.0" step="0.1" value="1.0">
-                        <span id="brightnessValue">1.0</span>
-                    </div>
-                    <div class="slider-item">
-                        <label for="contrastSlider">对比度 (0.2-2.0):</label>
-                        <input type="range" id="contrastSlider" min="0.2" max="2.0" step="0.1" value="1.0">
-                        <span id="contrastValue">1.0</span>
-                    </div>
-                </div>
+            <div class="checkbox-item" onclick="toggleCheckbox('crop')">
+                <input type="checkbox" id="crop" value="crop" checked>
+                <label for="crop">✂️ 随机裁剪</label>
             </div>
-
-            <div class="action-buttons">
-                <button class="btn btn-success" id="augmentBtn" onclick="applyBatchAugmentation()">批量处理图像</button>
+            <div class="checkbox-item" onclick="toggleCheckbox('scale')">
+                <input type="checkbox" id="scale" value="scale" checked>
+                <label for="scale">📏 随机缩放</label>
+            </div>
+            <div class="checkbox-item" onclick="toggleCheckbox('brightness')">
+                <input type="checkbox" id="brightness" value="brightness">
+                <label for="brightness">💡 亮度调节</label>
+            </div>
+            <div class="checkbox-item disabled" onclick="toggleCheckbox('contrast')">
+                <input type="checkbox" id="contrast" value="contrast" disabled>
+                <label for="contrast">🌗 对比度调节</label>
+            </div>
+            <div class="checkbox-item disabled" onclick="toggleCheckbox('noise')">
+                <input type="checkbox" id="noise" value="noise" disabled>
+                <label for="noise">📡 添加噪声</label>
+            </div>
+            <div class="checkbox-item disabled" onclick="toggleCheckbox('blur')">
+                <input type="checkbox" id="blur" value="blur" disabled>
+                <label for="blur">🌫️ 模糊效果</label>
+            </div>
+            <div class="checkbox-item disabled" onclick="toggleCheckbox('perspective')">
+                <input type="checkbox" id="perspective" value="perspective" disabled>
+                <label for="perspective">📐 透视变换</label>
+            </div>
+            <div class="checkbox-item disabled" onclick="toggleCheckbox('elastic')">
+                <input type="checkbox" id="elastic" value="elastic" disabled>
+                <label for="elastic">🌊 弹性变形</label>
             </div>
         </div>
 
-        <div id="messageArea"></div>
+        <div class="parameter-controls">
+            <div class="parameter-header">参数调节</div>
+            <div class="slider-group">
+                <div class="slider-item">
+                    <label for="brightnessSlider">亮度 (0.2-2.0):</label>
+                    <input type="range" id="brightnessSlider" min="0.2" max="2.0" step="0.1" value="1.0">
+                    <span id="brightnessValue">1.0</span>
+                </div>
+                <div class="slider-item">
+                    <label for="contrastSlider">对比度 (0.2-2.0):</label>
+                    <input type="range" id="contrastSlider" min="0.2" max="2.0" step="0.1" value="1.0" disabled>
+                    <span id="contrastValue">1.0</span>
+                </div>
+            </div>
+        </div>
 
-        <div class="results-section" id="resultsSection">
-            <div class="results-header">
-                处理结果
-            </div>
-            <div class="results-grid" id="resultsGrid"></div>
-            <div class="batch-actions">
-                <button class="btn download-btn" onclick="downloadAll()">下载全部处理后的图像</button>
-            </div>
+        <div class="action-buttons">
+            <button class="btn btn-success" id="augmentBtn" onclick="applyBatchAugmentation()">批量处理图像</button>
         </div>
     </div>
 
-    <script>
-        let uploadedFiles = [];
-        let processedResults = [];
+    <div id="messageArea"></div>
 
-        // 文件上传相关
-        const fileInput = document.getElementById('fileInput');
-        const uploadArea = document.getElementById('uploadArea');
-        const fileList = document.getElementById('fileList');
-        const fileItems = document.getElementById('fileItems');
-        const augmentationOptions = document.getElementById('augmentationOptions');
-        const resultsSection = document.getElementById('resultsSection');
-        const messageArea = document.getElementById('messageArea');
+    <div class="results-section" id="resultsSection">
+        <div class="results-header">
+            处理结果
+        </div>
+        <div class="results-grid" id="resultsGrid"></div>
+        <div class="batch-actions">
+            <button class="btn download-btn" onclick="downloadAll()">下载全部处理后的图像</button>
+        </div>
+    </div>
+</div>
 
-        function toggleCheckbox(id) {
-            const checkbox = document.getElementById(id);
-            checkbox.checked = !checkbox.checked;
-        }
+<script>
+    let uploadedFiles = [];
+    let processedResults = [];
 
-        // 拖拽上传功能
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
+    // 文件上传相关
+    const fileInput = document.getElementById('fileInput');
+    const uploadArea = document.getElementById('uploadArea');
+    const fileList = document.getElementById('fileList');
+    const fileItems = document.getElementById('fileItems');
+    const augmentationOptions = document.getElementById('augmentationOptions');
+    const resultsSection = document.getElementById('resultsSection');
+    const messageArea = document.getElementById('messageArea');
 
-        uploadArea.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-        });
+    function toggleCheckbox(id) {
+        const checkbox = document.getElementById(id);
+        if (checkbox.disabled) return;
+        checkbox.checked = !checkbox.checked;
+    }
 
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            const files = Array.from(e.dataTransfer.files);
-            handleMultipleFiles(files);
-        });
+    // 拖拽上传功能
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
 
-        fileInput.addEventListener('change', (e) => {
-            const files = Array.from(e.target.files);
-            handleMultipleFiles(files);
-        });
+    uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    });
 
-        // 滑块值更新
-        document.getElementById('brightnessSlider').addEventListener('input', function() {
-            document.getElementById('brightnessValue').textContent = this.value;
-        });
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = Array.from(e.dataTransfer.files);
+        handleMultipleFiles(files);
+    });
 
-        document.getElementById('contrastSlider').addEventListener('input', function() {
-            document.getElementById('contrastValue').textContent = this.value;
-        });
+    fileInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        handleMultipleFiles(files);
+    });
 
-        function showMessage(message, type) {
-            messageArea.innerHTML = `<div class="message ${type}">${message}</div>`;
-            setTimeout(() => {
-                messageArea.innerHTML = '';
-            }, 5000);
-        }
+    // 滑块值更新
+    document.getElementById('brightnessSlider').addEventListener('input', function () {
+        document.getElementById('brightnessValue').textContent = this.value;
+    });
 
-        function showLoading() {
-            messageArea.innerHTML = '<div class="loading"><div class="spinner"></div><p style="font-size: 1.1rem; color: #374151;">处理中，请稍候...</p></div>';
-        }
+    document.getElementById('contrastSlider').addEventListener('input', function () {
+        document.getElementById('contrastValue').textContent = this.value;
+    });
 
-        function handleMultipleFiles(files) {
-            if (files.length === 0) return;
+    function showMessage(message, type) {
+        messageArea.innerHTML = `<div class="message ${type}">${message}</div>`;
+        setTimeout(() => {
+            messageArea.innerHTML = '';
+        }, 5000);
+    }
 
-            showLoading();
+    function showLoading() {
+        messageArea.innerHTML = '<div class="loading"><div class="spinner"></div><p style="font-size: 1.1rem; color: #374151;">处理中，请稍候...</p></div>';
+    }
 
+    async function handleMultipleFiles(files) {
+        if (files.length === 0) return;
+
+        showLoading();
+
+        let successCount = 0;
+        for (const file of files) {
             const formData = new FormData();
-            files.forEach(file => {
-                formData.append('files', file);
-            });
+            formData.append('files', file);
 
-            fetch('/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    uploadedFiles = data.files;
-                    showMessage(`成功上传 ${data.files.length} 个文件！`, 'success');
-                    displayFileList();
-                    augmentationOptions.style.display = 'block';
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success && Array.isArray(data.files)) {
+                    uploadedFiles = uploadedFiles.concat(data.files);
+                    successCount += data.files.length;
                 } else {
-                    showMessage(`上传失败: ${data.error}`, 'error');
+                    console.error('上传失败', data.error || data);
                 }
-            })
-            .catch(error => {
-                showMessage(`上传失败: ${error.message}`, 'error');
-            });
+            } catch (error) {
+                console.error('上传失败', error);
+            }
         }
 
-        function displayFileList() {
-            fileList.style.display = 'block';
-            document.getElementById('fileCount').textContent = uploadedFiles.length;
+        if (successCount > 0) {
+            showMessage(`成功上传 ${successCount} 个文件！`, 'success');
+            displayFileList();
+            augmentationOptions.style.display = 'block';
+        } else {
+            showMessage('上传失败，请重试', 'error');
+        }
+    }
 
-            fileItems.innerHTML = uploadedFiles.map((file, index) => `
+    function displayFileList() {
+        fileList.style.display = 'block';
+        document.getElementById('fileCount').textContent = uploadedFiles.length;
+
+        fileItems.innerHTML = uploadedFiles.map((file, index) => `
                 <div class="file-item">
                     <span class="file-item-name">📄 ${file.original_name}</span>
                     <span class="file-item-remove" onclick="removeFile(${index})">✖</span>
                 </div>
             `).join('');
+    }
+
+    function removeFile(index) {
+        uploadedFiles.splice(index, 1);
+        if (uploadedFiles.length === 0) {
+            fileList.style.display = 'none';
+            augmentationOptions.style.display = 'none';
+        } else {
+            displayFileList();
+        }
+    }
+
+    function applyBatchAugmentation() {
+        if (uploadedFiles.length === 0) {
+            showMessage('请先上传图像文件', 'error');
+            return;
         }
 
-        function removeFile(index) {
-            uploadedFiles.splice(index, 1);
-            if (uploadedFiles.length === 0) {
-                fileList.style.display = 'none';
-                augmentationOptions.style.display = 'none';
-            } else {
-                displayFileList();
-            }
+        const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]:checked');
+        const augmentations = Array.from(checkboxes).map(cb => cb.value);
+
+        if (augmentations.length === 0) {
+            showMessage('请至少选择一种数据增强方法', 'error');
+            return;
         }
 
-        function applyBatchAugmentation() {
-            if (uploadedFiles.length === 0) {
-                showMessage('请先上传图像文件', 'error');
-                return;
-            }
+        const brightness = parseFloat(document.getElementById('brightnessSlider').value);
+        const contrast = parseFloat(document.getElementById('contrastSlider').value);
+        const filenames = uploadedFiles.map(f => f.filename);
 
-            const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]:checked');
-            const augmentations = Array.from(checkboxes).map(cb => cb.value);
+        showLoading();
+        document.getElementById('augmentBtn').disabled = true;
 
-            if (augmentations.length === 0) {
-                showMessage('请至少选择一种数据增强方法', 'error');
-                return;
-            }
-
-            const brightness = parseFloat(document.getElementById('brightnessSlider').value);
-            const contrast = parseFloat(document.getElementById('contrastSlider').value);
-            const filenames = uploadedFiles.map(f => f.filename);
-
-            showLoading();
-            document.getElementById('augmentBtn').disabled = true;
-
-            fetch('/augment', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    filenames: filenames,
-                    augmentations: augmentations,
-                    brightness: brightness,
-                    contrast: contrast
-                })
+        fetch('/augment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                filenames: filenames,
+                augmentations: augmentations,
+                brightness: brightness,
+                contrast: contrast
             })
+        })
             .then(response => response.json())
             .then(data => {
                 document.getElementById('augmentBtn').disabled = false;
@@ -654,15 +687,15 @@
                 document.getElementById('augmentBtn').disabled = false;
                 showMessage(`处理失败: ${error.message}`, 'error');
             });
-        }
+    }
 
-        function displayResults() {
-            resultsSection.style.display = 'block';
-            const resultsGrid = document.getElementById('resultsGrid');
+    function displayResults() {
+        resultsSection.style.display = 'block';
+        const resultsGrid = document.getElementById('resultsGrid');
 
-            resultsGrid.innerHTML = processedResults.map((result, index) => {
-                if (result.success) {
-                    return `
+        resultsGrid.innerHTML = processedResults.map((result, index) => {
+            if (result.success) {
+                return `
                         <div class="result-card">
                             <div class="result-card-header">
                                 ✅ 图像 ${index + 1}: ${uploadedFiles[index].original_name}
@@ -673,8 +706,8 @@
                             </div>
                         </div>
                     `;
-                } else {
-                    return `
+            } else {
+                return `
                         <div class="result-card">
                             <div class="result-card-header" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
                                 ❌ 图像 ${index + 1}: 处理失败
@@ -684,25 +717,25 @@
                             </div>
                         </div>
                     `;
-                }
-            }).join('');
+            }
+        }).join('');
 
-            resultsGrid.scrollIntoView({ behavior: 'smooth' });
-        }
+        resultsGrid.scrollIntoView({behavior: 'smooth'});
+    }
 
-        function downloadSingle(filename) {
-            window.open(`/download/${filename}`, '_blank');
-        }
+    function downloadSingle(filename) {
+        window.open(`/download/${filename}`, '_blank');
+    }
 
-        function downloadAll() {
-            processedResults.forEach((result, index) => {
-                if (result.success) {
-                    setTimeout(() => {
-                        window.open(`/download/${result.output_filename}`, '_blank');
-                    }, index * 200);
-                }
-            });
-        }
-    </script>
+    function downloadAll() {
+        processedResults.forEach((result, index) => {
+            if (result.success) {
+                setTimeout(() => {
+                    window.open(`/download/${result.output_filename}`, '_blank');
+                }, index * 200);
+            }
+        });
+    }
+</script>
 </body>
 </html>
