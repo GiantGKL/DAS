@@ -13,6 +13,10 @@ outputs/
 uploads/
 dist/
 build/
+
+# Logs
+*.log
+nohup.out
 # IDE
 .vscode/
 .idea/
